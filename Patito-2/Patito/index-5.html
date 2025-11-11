@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="es">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>ArquitecturaPC — Cómo Funciona una Computadora</title>
+	<meta name="description" content="Guía visual e interactiva del funcionamiento interno de las computadoras: transistores, arquitectura, memoria y cuellos de botella." />
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+	<style>
+		:root{
+			--bg:#0e1113; 
+			--panel:#111416; 
+			--muted:#98a0a7;
+			--accent:#2b76ff;
+			--card:#15181a;
+			--glass: rgba(255,255,255,0.03);
+			--radius:12px;
+		}
+		*{box-sizing:border-box}
+		html,body{height:100%}
+		body{
+			margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial;
+			background:var(--bg);color:#e6eef6;-webkit-font-smoothing:antialiased;
+			line-height:1.5;font-size:16px;
+		}
+
+
+		.nav{position:fixed;top:0;left:0;right:0;z-index:60;background:linear-gradient(180deg, rgba(8,10,12,0.75), rgba(8,10,12,0.3));backdrop-filter:blur(6px);border-bottom:1px solid rgba(255,255,255,0.03)}
+		.nav-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:18px}
+		.brand{font-weight:800;font-family:Montserrat,Inter;font-size:20px}
+		.nav-links{display:flex;gap:18px;align-items:center}
+		.nav-links a{color:#cfe3ff;text-decoration:none;padding:8px 12px;border-radius:8px;font-weight:600;font-size:14px;opacity:0.9}
+		.nav-links a.active{background:rgba(255,255,255,0.05)}
+
+
+		.hero{height:92vh;min-height:560px;display:flex;align-items:center;justify-content:center;position:relative;padding-top:68px}
+		.hero::before{content:"";position:absolute;inset:0;background-image:url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1800&auto=format&fit=crop&ixlib=rb-4.0.3&s=1e948d5d3d6d2b1d0f1b3b6bdb2a9d2b');background-size:cover;background-position:center;filter:grayscale(10%) brightness(0.3) contrast(0.9);}
+		.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg, rgba(6,8,10,0.4), rgba(6,8,10,0.6));}
+		.hero-inner{position:relative;z-index:2;text-align:center;max-width:900px;padding:40px}
+		.hero h1{font-family:Montserrat;font-size:64px;margin:0;color:#fff;letter-spacing:-1px}
+		.hero p.lead{color:rgba(230,238,246,0.75);font-size:18px;margin:20px 0 28px}
+		.cta{background:var(--accent);color:white;padding:12px 20px;border-radius:8px;border:none;font-weight:700;cursor:pointer}
+
+	
+		.stepper{max-width:1100px;margin:18px auto 36px;padding-top:86px}
+		.steps{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:26px;border-top:1px solid rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.03)}
+		.step{flex:1;position:relative;text-align:center}
+		.step .dot{width:42px;height:42px;border-radius:50%;background:#22272a;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;color:#cfe3ff;font-weight:700}
+		.step .label{font-size:13px;color:var(--muted)}
+		.step + .step::before{content:"";position:absolute;left:0;top:20px;right:0;height:4px;background:linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));z-index:-1}
+		.step.active .dot{background:var(--accent);box-shadow:0 6px 18px rgba(43,118,255,0.18)}
+
+		.container{max-width:1100px;margin:40px auto;padding:0 20px}
+		.title{font-family:Montserrat;font-size:44px;text-align:center;margin:18px 0;color:#fff}
+		.subtitle{text-align:center;color:var(--muted);margin-bottom:28px}
+
+	
+		.panel{background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));border:1px solid rgba(255,255,255,0.02);padding:24px;border-radius:14px;display:flex;gap:28px}
+		.panel .left{flex:1}
+		.panel h3{margin:0 0 10px;font-size:20px}
+		.status{display:flex;align-items:center;gap:10px;margin:12px 0;font-weight:700}
+		.dot-ind{width:12px;height:12px;border-radius:50%;display:inline-block}
+		.btn-toggle{background:linear-gradient(180deg,var(--accent),#1f63d6);color:white;padding:10px 14px;border-radius:8px;border:none;font-weight:700;cursor:pointer}
+
+		
+		.trans-graphic{width:140px;height:80px;border-radius:6px;background:#1b1f21;display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
+		.trans-labels{display:flex;justify-content:space-between;margin-top:8px;font-size:13px;color:var(--muted)}
+
+
+		.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-top:36px}
+		.card{background:var(--card);border-radius:12px;padding:18px;border:1px solid rgba(255,255,255,0.02)}
+		.card img{width:100%;height:180px;object-fit:cover;border-radius:8px;margin-bottom:12px}
+		.icon-card{width:100%;height:180px;border-radius:8px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));border:1px solid rgba(255,255,255,0.02)}
+		.icon-card svg{width:86%;height:86%;max-height:150px}
+		.card h4{margin:6px 0}
+
+	
+		.mem-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:28px}
+		.mem-box{background:var(--panel);Padding:18px;border-radius:12px;text-align:left;border:1px solid rgba(255,255,255,0.02)}
+		.mem-box h5{margin:0 0 8px}
+
+
+		.bottle-list{display:flex;flex-direction:column;gap:16px;margin-top:28px}
+		.bottle{background:var(--card);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.02)}
+		.progress{height:8px;background:rgba(255,255,255,0.06);border-radius:8px;overflow:hidden;margin-top:10px}
+		.progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#6ea8ff);width:40%}
+
+		
+		main{padding-top:8px}
+
+	
+		@media (max-width:900px){
+			.grid{grid-template-columns:1fr}
+			.mem-grid{grid-template-columns:repeat(2,1fr)}
+			.hero h1{font-size:40px}
+		}
+		@media (max-width:560px){
+			.mem-grid{grid-template-columns:1fr}
+			.nav-inner{padding:12px}
+			.stepper{padding-top:90px}
+		}
+
+		
+		.input{font-size:15px}
+		.product-list{display:flex;flex-direction:column;gap:12px}
+		.product-item{display:flex;align-items:center;justify-content:space-between;padding:12px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));border:1px solid rgba(255,255,255,0.02)}
+		.product-item .meta{display:flex;gap:12px;align-items:center}
+		.product-item img{width:56px;height:42px;object-fit:cover;border-radius:6px}
+		.btn-primary{background:#ffd300;color:#0b0b0b;padding:12px;border:none;border-radius:8px;font-weight:700;cursor:pointer}
+
+
+		#project-doc .panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));}
+		#project-doc h2.title{font-size:28px}
+		#project-doc article h3{font-size:18px}
+		#project-doc article h4{font-size:15px}
+		#project-doc ol, #project-doc ul{margin:8px 0 0 18px}
+		#project-doc aside{flex-shrink:0}
+		@media (max-width:900px){
+			#project-doc .panel{padding:16px}
+			#project-doc aside{flex:1 1 100%;order:2}
+			#project-doc article{order:1}
+		}
+
+	</style>
+</head>
+<body>
+	<header class="nav">
+		<div class="nav-inner">
+			<div class="brand">ArquitecturaPC</div>
+			<nav class="nav-links">
+				<a href="#inicio">Inicio</a>
+				<a href="#transistores" class="active">Transistores</a>
+				<a href="#arquitectura">Arquitectura</a>
+				<a href="#memoria">Memoria</a>
+				<a href="#cuellos">Cuellos de Botella</a>
+			</nav>
+		</div>
+	</header>
+
+	<section id="inicio" class="hero">
+		<div class="hero-inner">
+			<h1>Arquitectura de una Computadora</h1>
+			<p class="lead">Arquitectura de una computadora: cómo funciona y más</p>
+			<button class="cta" onclick="document.querySelector('#transistores').scrollIntoView({behavior:'smooth'})">Explorar Ahora</button>
+		</div>
+	</section>
+
+	<div class="stepper">
+		<div class="steps">
+			<div class="step active"><div class="dot">1</div><div class="label">Transistores</div></div>
+			<div class="step"><div class="dot">2</div><div class="label">Arquitectura</div></div>
+			<div class="step"><div class="dot">3</div><div class="label">Memoria</div></div>
+			<div class="step"><div class="dot">4</div><div class="label">Cuellos</div></div>
+		</div>
+	</div>
+
+	<main>
+		<section id="transistores" class="container">
+			<h2 class="title">Transistores: El Fundamento</h2>
+			<p class="subtitle">Todo comienza con el interruptor más pequeño del mundo</p>
+
+			<div class="panel">
+				<div class="left">
+					<h3>Transistor: El Componente Básico</h3>
+					<p style="color:var(--muted);">Un transistor es un interruptor electrónico que puede estar encendido (1) o apagado (0). Miles de millones de estos transistores trabajan juntos para crear la computación moderna.</p>
+					<div class="status">
+						<span class="dot-ind" id="statusDot" style="background:#34d399"></span>
+						<span id="statusText">Estado: ON (1)</span>
+					</div>
+					<button class="btn-toggle" id="toggleBtn">Apagar Transistor</button>
+				</div>
+
+				<div style="width:320px">
+					<div style="display:flex;flex-direction:column;align-items:center">
+						<div class="trans-graphic" id="transBox" style="background:#10b981">Fuente → ▮ ← Drenaje</div>
+						<div class="trans-labels"><span style="color:var(--muted)">Fuente</span><span style="color:var(--muted)">Puerta</span><span style="color:var(--muted)">Drenaje</span></div>
+					</div>
+				</div>
+			</div>
+
+			<p style="text-align:center;color:var(--muted);margin-top:18px">Los transistores son los componentes básicos de todos los circuitos digitales. Un procesador moderno puede contener miles de millones de transistores en un área menor que una uña.</p>
+		</section>
+
+		<section id="arquitectura" class="container">
+			<h2 class="title">Arquitectura: De Transistores a CPU</h2>
+			<p class="subtitle">Cómo los bloques básicos se convierten en un procesador completo</p>
+
+			<div style="display:flex;gap:12px;align-items:center;justify-content:center;margin-bottom:24px">
+				<div style="background:var(--accent);color:#fff;padding:8px 14px;border-radius:8px;font-weight:700">Transistor</div>
+				<div style="background:rgba(255,255,255,0.03);color:var(--muted);padding:8px 14px;border-radius:8px">Puerta Lógica</div>
+				<div style="background:rgba(255,255,255,0.03);color:var(--muted);padding:8px 14px;border-radius:8px">ALU</div>
+				<div style="background:rgba(255,255,255,0.03);color:var(--muted);padding:8px 14px;border-radius:8px">CPU</div>
+			</div>
+
+			<div class="grid">
+				<div class="card">
+					<div class="icon-card" aria-hidden="true">
+			
+						<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+							<rect x="8" y="8" width="48" height="48" rx="6" fill="#0f1720" stroke="#2b3440" stroke-width="1"/>
+							<rect x="18" y="18" width="28" height="28" rx="3" fill="#1f2933"/>
+							<g fill="#2b76ff" opacity="0.95">
+								<rect x="22" y="22" width="6" height="6" rx="1"/>
+								<rect x="36" y="22" width="6" height="6" rx="1"/>
+								<rect x="22" y="36" width="6" height="6" rx="1"/>
+								<rect x="36" y="36" width="6" height="6" rx="1"/>
+							</g>
+						</svg>
+					</div>
+					<h4>Chip de Silicio</h4>
+					<p style="color:var(--muted)">Fundamento de la computación. Los chips contienen miles de millones de transistores microscópicos.</p>
+				</div>
+				<div class="card">
+					<div class="icon-card" aria-hidden="true">
+	
+						<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+							<rect x="14" y="14" width="36" height="36" rx="4" fill="#101318" stroke="#2b3440"/>
+							<rect x="20" y="20" width="24" height="24" rx="2" fill="#111827"/>
+							<path d="M24 26h16v2H24zM24 30h16v2H24zM24 34h10v2H24z" fill="#34d399"/>
+						</svg>
+					</div>
+					<h4>Procesador CPU</h4>
+					<p style="color:var(--muted)">La Unidad Central de Procesamiento ejecuta instrucciones, realiza cálculos y coordina el sistema.</p>
+				</div>
+			</div>
+
+			<div class="grid" style="margin-top:18px">
+				<div class="card">
+					<div class="icon-card" aria-hidden="true">
+						<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+							<rect x="6" y="22" width="52" height="20" rx="3" fill="#0b1220" stroke="#2b3440"/>
+							<rect x="10" y="26" width="44" height="12" rx="2" fill="#111827"/>
+							<g fill="#2b76ff">
+								<rect x="14" y="28" width="6" height="8" rx="1"/>
+								<rect x="22" y="28" width="6" height="8" rx="1"/>
+								<rect x="30" y="28" width="6" height="8" rx="1"/>
+								<rect x="38" y="28" width="6" height="8" rx="1"/>
+							</g>
+						</svg>
+					</div>
+					<h4>Memoria RAM</h4>
+					<p style="color:var(--muted)">Almacenamiento volátil que permite acceso rápido a datos y programas activos.</p>
+				</div>
+				<div class="card">
+					<div class="icon-card" aria-hidden="true">
+	
+						<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+							<rect x="8" y="8" width="48" height="48" rx="4" fill="#0b1216" stroke="#22272a"/>
+							<rect x="14" y="14" width="36" height="36" rx="2" fill="#0f1720"/>
+							<circle cx="28" cy="28" r="3" fill="#34d399"/>
+							<rect x="38" y="32" width="8" height="6" rx="1" fill="#2b76ff"/>
+							<rect x="18" y="36" width="6" height="6" rx="1" fill="#c084fc"/>
+						</svg>
+					</div>
+					<h4>Placa Base</h4>
+					<p style="color:var(--muted)">Conecta los componentes, proporciona energía y comunicación entre CPU, RAM y periféricos.</p>
+				</div>
+			</div>
+		</section>
+
+		<section id="memoria" class="container">
+			<h2 class="title">Jerarquía de Memoria</h2>
+			<p class="subtitle">El balance entre velocidad, tamaño y costo</p>
+
+			<div class="mem-grid">
+				<div class="mem-box">
+					<h5>Registros CPU</h5>
+					<div style="color:var(--muted);font-size:14px">Velocidad: &lt; 1 m/s<br>Tamaño: Bytes</div>
+				</div>
+				<div class="mem-box">
+					<h5>Caché L1/L2/L3</h5>
+					<div style="color:var(--muted);font-size:14px">Velocidad: 1-10 m/s<br>Tamaño: KB - MB</div>
+				</div>
+				<div class="mem-box">
+					<h5>RAM</h5>
+					<div style="color:var(--muted);font-size:14px">Velocidad: 50-100 m/s<br>Tamaño: GB</div>
+				</div>
+				<div class="mem-box">
+					<h5>SSD/HDD</h5>
+					<div style="color:var(--muted);font-size:14px">Velocidad: µs - ms<br>Tamaño: TB</div>
+				</div>
+			</div>
+		</section>
+
+		<section id="cuellos" class="container" style="margin-bottom:86px">
+			<h2 class="title">Cuellos de Botella</h2>
+			<p class="subtitle">Limitaciones que afectan el rendimiento del sistema</p>
+
+			<div class="bottle-list">
+				<div class="bottle">
+					<div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:12px;align-items:center"><div style="width:34px;height:34px;border-radius:8px;background:#2a2a35;display:flex;align-items:center;justify-content:center;color:#ffb4b4">⚙️</div><div><strong>Limitado por CPU</strong><div style="color:var(--muted);font-size:14px">El procesador está al 100% ejecutando cálculos intensivos</div></div></div><div style="color:var(--muted)">85%</div></div>
+					<div class="progress"><i style="width:85%"></i></div>
+				</div>
+
+				<div class="bottle">
+					<div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:12px;align-items:center"><div style="width:34px;height:34px;border-radius:8px;background:#2a2a35;display:flex;align-items:center;justify-content:center;color:#cdb4ff">💾</div><div><strong>Limitado por Memoria</strong><div style="color:var(--muted);font-size:14px">La RAM o el ancho de banda limitan el rendimiento del sistema</div></div></div><div style="color:var(--muted)">70%</div></div>
+					<div class="progress"><i style="width:70%"></i></div>
+				</div>
+
+				<div class="bottle">
+					<div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:12px;align-items:center"><div style="width:34px;height:34px;border-radius:8px;background:#2a2a35;display:flex;align-items:center;justify-content:center;color:#cde7ff">📶</div><div><strong>Limitado por E/S</strong><div style="color:var(--muted);font-size:14px">El disco duro o la red ralentiza el sistema al transferir datos</div></div></div><div style="color:var(--muted)">60%</div></div>
+					<div class="progress"><i style="width:60%"></i></div>
+				</div>
+			</div>
+
+			<p style="text-align:center;color:var(--muted);margin-top:28px">Entender los cuellos de botella es clave para optimizar el rendimiento. Un sistema es tan rápido como su componente más lento.</p>
+		</section>
+
+		<div style="text-align:center;margin-top:28px">
+			<button class="cta" onclick="document.getElementById('configurator').scrollIntoView({behavior:'smooth'})">Configurar mi PC</button>
+		</div>
+
+		<section id="configurator" class="container" style="margin-top:36px;padding-bottom:40px">
+			<h2 class="title">Configura tu PC</h2>
+			<p class="subtitle">Dime tu nombre y elige los componentes para montar tu equipo ideal.</p>
+
+			<div class="config-wrap" style="display:flex;gap:20px;align-items:flex-start">
+				<div style="flex:1;min-width:0">
+					<div class="card" style="padding:18px;margin-bottom:18px">
+						<label for="userName" style="display:block;font-weight:700;margin-bottom:8px">Tu nombre</label>
+						<input id="userName" class="input" placeholder="Escribe tu nombre..." style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit" />
+						<div id="greeting" style="margin-top:12px;color:var(--muted);"></div>
+					</div>
+
+					<div class="card">
+						<div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+							<strong style="font-size:15px">Categorías</strong>
+							<select id="categorySelect" style="margin-left:auto;padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);color:var(--muted)">
+								<option value="procesador">Procesador</option>
+								<option value="placa">Placa Base</option>
+								<option value="ram">RAM</option>
+								<option value="gpu">Tarjeta Gráfica</option>
+								<option value="almacenamiento">Almacenamiento</option>
+								<option value="fuente">Fuente</option>
+								<option value="sistema">Sistema Operativo</option>
+							</select>
+							<select id="brandSelect" style="margin-left:8px;padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);color:var(--muted);display:none">
+								<option value="all">Todas las marcas</option>
+							</select>
+						</div>
+						<div id="productList" class="product-list"></div>
+					</div>
+				</div>
+
+				<aside style="width:340px">
+					<div class="card" style="position:sticky;top:100px">
+						<h4 style="margin:0 0 10px">Componentes seleccionados</h4>
+						<div id="selectedList" style="min-height:120px;color:var(--muted);">
+							<p style="margin:0">No hay componentes seleccionados.</p>
+						</div>
+						<div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+							<strong>Total:</strong>
+							<strong id="totalPrice">
+								$0.00
+							</strong>
+						</div>
+						<button id="addToCart" class="btn-primary" style="width:100%;margin-top:14px">Califica mi PC</button>
+						<div id="psuEstimate" style="margin-top:8px;color:var(--muted);font-size:14px">Estimación PSU: -</div>
+					</div>
+				</aside>
+			</div>
+		</section>
+	</main>
+
+	
+	
+	<section id="project-doc" class="container" style="margin-top:28px;margin-bottom:56px">
+		<div class="panel" style="flex-direction:column;gap:18px;padding:28px">
+			<div style="width:100%;display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap">
+				<div>
+					<h2 class="title" style="text-align:left;margin:0;font-size:32px">ARQUITECTURA DE COMPUTADORAS Y SISTEMAS OPERATIVOS</h2>
+					<div style="color:var(--muted);margin-top:6px">Nombres: Jordan Reyes, Anthony Herrero, Mateo Charro · Fecha: 7/10/2025</div>
+				</div>
+				<div style="min-width:220px;text-align:right">
+				
+				</div>
+			</div>
+
+			<div style="width:100%;display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+				<aside style="flex:0 0 280px;background:var(--glass);padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)">
+					<h4 style="margin:0 0 8px">Índice</h4>
+					<ol style="margin:0;padding-left:18px;color:var(--muted);font-size:14px;line-height:1.6">
+						<li>PARTE 1: Servidor Web Local y Diseño Web
+							<ol style="margin:6px 0 10px 18px;color:var(--muted)">
+								<li>1.1. Creación del HTML</li>
+								<li>1.2. Creación del Servidor</li>
+							</ol>
+						</li>
+						<li>PARTE 2: CPU-Z y Mainboard
+							<ol style="margin:6px 0 10px 18px;color:var(--muted)">
+								<li>2.1. Modelo de la Mainboard y Datasheet</li>
+								<li>2.2. Tres Características de la Mainboard</li>
+							</ol>
+						</li>
+						<li>PARTE 3: BIOS/UEFI
+							<ol style="margin:6px 0 10px 18px;color:var(--muted)">
+								<li>3.1. Obtención de la Imagen y Parámetros</li>
+								<li>3.2. Explicación de los Parámetros</li>
+							</ol>
+						</li>
+						<li>Bibliografía</li>
+					</ol>
+				</aside>
+
+				<div style="flex:1;min-width:280px">
+					<article style="background:transparent;padding:6px 0;color:var(--muted);font-size:15px;line-height:1.6;white-space:pre-wrap">
+						<h3 style="margin-top:0;color:#fff">ARQUITECTURA DE COMPUTADORAS Y SISTEMAS OPERATIVOS</h3>
+						<p style="color:var(--muted);margin-top:6px">Nombres: Jordan Reyes, Anthony Herrero, Mateo Charro<br>Fecha: 7/10/2025</p>
+
+										<p style="color:var(--muted);font-style:italic;margin-top:12px">Índice</p>
+
+						<h4 style="margin:12px 0 6px;color:#fff">1. PARTE 1: Servidor Web Local y Diseño Web</h4>
+						<h5 style="margin:6px 0;color:#fff">1.1. Creación del HTML</h5>
+						<p>El código que se ha creado busca explicar la arquitectura de las computadoras de una manera visual y educativa. Se utiliza HTML para organizar la información en secciones clave, tales como: Transistores, Arquitectura, Memoria y Cuellos de Botella (Reyes et al., 2025).</p>
+
+						<p>Se implementó CSS para darle un diseño atractivo y moderno, utilizando variables que permiten mantener la coherencia en los colores y estilos. Además, se ha añadido JavaScript para permitir la interacción con la página, como encender y apagar un transistor simulado y seleccionar diferentes componentes para configurar un PC. Esta combinación de tecnologías ofrece una forma dinámica y atractiva de aprender sobre el funcionamiento interno de las computadoras.</p>
+
+										<img src="fotos/html.png" alt="Captura de la web ejecutándose" style="display:block;max-width:100%;margin:16px auto;border-radius:10px;border:1px solid #222" />
+
+						<h5 style="margin:12px 0 6px;color:#fff">1.2. Creación del Servidor</h5>
+						<p>La puesta en marcha del servidor web local se realizó utilizando XAMPP, un paquete que incluye el servidor web Apache, MySQL, PHP y Perl (Apache Friends, s.f.).</p>
+
+						<p><strong>Instalación:</strong></p>
+						<p>Se descargó el instalador de XAMPP desde el sitio web de Apache Friends.</p>
+
+						<p>Durante la instalación, se eligió la ruta por defecto (C:\xampp) y se seleccionaron los componentes esenciales como Apache y MySQL.</p>
+
+						<p><strong>Iniciar el Servidor:</strong></p>
+						<p>Una vez instalado, se accedió al Panel de Control de XAMPP.</p>
+
+						<p>Se presionó el botón "Start" en el módulo de Apache (el servidor web principal).</p>
+
+						<p>También se inició el módulo de MySQL para futuras implementaciones de bases de datos.</p>
+
+						<p><strong>Subir el Sitio Web (Proyecto):</strong></p>
+						<p>Para que el servidor local pueda exhibir la página web, los archivos fueron colocados en la carpeta principal de documentos web de Apache, llamada htdocs (Apache HTTP Server Project, s.f.).</p>
+
+						<p>Se creó la carpeta del proyecto dentro de C:\xampp\htdocs.</p>
+
+						<p>El archivo principal fue nombrado index.html y colocado en dicha carpeta.</p>
+
+						<p>Se comprobó el acceso al proyecto ingresando la dirección http://localhost/nombre-de-tu-carpeta/ en el navegador, confirmando que la página web se estaba ejecutando correctamente desde el servidor local.</p>
+
+										<div style="display:flex;gap:18px;flex-wrap:wrap;justify-content:center;margin:16px 0">
+											<img src="fotos/xlm.png" alt="Panel de Control XAMPP - Apache y MySQL" style="max-width:48%;min-width:220px;border-radius:10px;border:1px solid #222" />
+											<img src="fotos/setup.png" alt="Panel de Control XAMPP - Setup" style="max-width:48%;min-width:220px;border-radius:10px;border:1px solid #222" />
+										</div>
+
+						<h4 style="margin-top:16px;color:#fff">2. PARTE 2: CPU-Z y Mainboard</h4>
+						<h5 style="margin:6px 0;color:#fff">2.1. Modelo de la Mainboard y Datasheet</h5>
+						<p>Modelo de la Mainboard: <strong>LENOVO LNVNB-161216</strong></p>
+
+						<p><strong>Enlace al Datasheet/Información Especializada:</strong></p>
+						<p>El datasheet fue consultado en un foro especializado de Lenovo (Foros Lenovo, 2024), donde se discuten las especificaciones de la placa base, incluido el soporte de memoria RAM máximo.</p>
+
+										<img src="fotos/cpu.png" alt="Captura de CPU-Z mostrando el modelo de la Mainboard" style="display:block;max-width:100%;margin:16px auto;border-radius:10px;border:1px solid #222" />
+
+						<h5 style="margin:12px 0 6px;color:#fff">2.2. Tres Características de la Mainboard</h5>
+						<p>Las siguientes características han sido seleccionadas de la Mainboard:</p>
+
+						<p><strong>Bus PCI-Express 3.0 (8.0 GT/s):</strong></p>
+						<p>Descripción: Esta interfaz permite una conexión de alta velocidad y estable para tarjetas gráficas dedicadas y otros dispositivos, garantizando una alta frecuencia de velocidad en la transferencia de datos (PCI-SIG, 2017).</p>
+						<p>Enlace de Origen: https://pcisig.com/specifications/pciexpress</p>
+
+						<p><strong>Chip AMD FCH (Fusion Controller Hub):</strong></p>
+						<p>Descripción: El Fusion Controller Hub es el chip de la placa base que maneja la comunicación de entrada/salida (I/O), lo que permite que puertos como SATA y USB tengan una frecuencia óptima para la comunicación con el procesador (Advanced Micro Devices, s.f.a).</p>
+						<p>Enlace de Origen: https://www.amd.com/es.html</p>
+
+						<p><strong>Soporte para Procesadores AMD Ryzen Mobile Picasso:</strong></p>
+						<p>Descripción: Esta arquitectura de procesadores es clave, ya que optimiza el consumo de energía y proporciona un alto rendimiento al integrar tanto la CPU como la GPU en un solo die, asegurando que ambos funcionen eficientemente para tareas móviles (Advanced Micro Devices, s.f.b).</p>
+						<p>Enlace de Origen: https://www.amd.com/es.html</p>
+
+						<h4 style="margin-top:16px;color:#fff">3. PARTE 3: BIOS/UEFI</h4>
+						<h5 style="margin:6px 0;color:#fff">3.1. Obtención de la Imagen y Parámetros</h5>
+										<img src="fotos/bios.png" alt="Foto de la pantalla de la BIOS o UEFI" style="display:block;max-width:100%;margin:16px auto;border-radius:10px;border:1px solid #222" />
+						<p style="color:var(--muted)">La imagen fue obtenida al reiniciar la computadora y presionar la tecla de acceso a la configuración del BIOS/UEFI, la cual es esencial para inicializar y configurar el hardware antes de cargar el sistema operativo.</p>
+
+						<h5 style="margin:12px 0 6px;color:#fff">3.2. Explicación de los Parámetros</h5>
+						<p>Se han seleccionado y explicado tres parámetros clave mostrados en la imagen del BIOS/UEFI:</p>
+
+						<p><strong>Processor Type:</strong> AMD Ryzen 7 8845HS w/ Radeon 780M Graphics</p>
+						<p>Descripción: Este campo identifica el procesador instalado. El AMD Ryzen 7 8845HS es un procesador de alto rendimiento para laptops, optimizado para ofrecer un equilibrio entre potencia y eficiencia. La inclusión de los Radeon 780M Graphics indica que el procesador cuenta con una unidad de gráficos integrada de alto nivel (Advanced Micro Devices, 2024).</p>
+						<p>Fuente: https://www.amd.com/en/products/processors/laptop/ryzen/8000-series/amd-ryzen-7-8845hs.html</p>
+
+						<p><strong>Total Memory:</strong> 16 GB</p>
+						<p>Descripción: Este parámetro muestra la cantidad total de memoria RAM instalada en el sistema. Contar con 16 GB es un estándar actual, adecuado para tareas exigentes como gaming, edición de video y multitarea avanzada, ya que permite que el sistema operativo y las aplicaciones almacenen datos de acceso rápido (Xataka Basics, 2019).</p>
+						<p>Fuente: https://www.xataka.com/basics/memoria-ram-que-sirve-como-mirar-cuanta-tiene-tu-ordenador-movil</p>
+
+						<p><strong>BIOS Revision:</strong> F.07</p>
+						<p>Descripción: Este campo indica la versión actual del BIOS (Basic Input/Output System) o UEFI. El BIOS es el firmware que se ejecuta al encender la computadora, crucial para la inicialización del hardware. La versión F.07 es una revisión específica liberada por el fabricante del equipo (HP, 2021).</p>
+						<p>Fuente: https://support.hp.com/ec-es/document/ish_3936511-3160793-16</p>
+
+						<h4 style="margin-top:16px;color:#fff">4. Bibliografía</h4>
+						<p style="color:var(--muted)">Advanced Micro Devices. (s.f.a). AMD Technologies. Recuperado de https://www.amd.com/es.html</p>
+						<p style="color:var(--muted)">Advanced Micro Devices. (s.f.b). AMD Ryzen Mobile Processors. Recuperado de https://www.amd.com/es.html</p>
+						<p style="color:var(--muted)">Advanced Micro Devices. (2024). AMD Ryzen 7 8845HS Specifications. Recuperado de https://www.amd.com/en/products/processors/laptop/ryzen/8000-series/amd-ryzen-7-8845hs.html</p>
+						<p style="color:var(--muted)">Apache Friends. (s.f.). XAMPP. Recuperado de https://www.apachefriends.org/es/index.html</p>
+						<p style="color:var(--muted)">Apache HTTP Server Project. (s.f.). Documentation: The Apache HTTP Server Project. Recuperado de https://httpd.apache.org/</p>
+						<p style="color:var(--muted)">Foros Lenovo. (2024, 25 de enero). LENOVO LNVNB-161216 MAINBOARD MAKS RAM. Recuperado de https://forums.lenovo.com/t5/Lenovo-IdeaPad-1xx-3xx-5xx-7xx-Edge-LaVie-Z-Flex-Laptops/LENOVO-LNVNB-161216-MA%C4%B0NBOARD-MAKS-RAM/m-p/5310282</p>
+						<p style="color:var(--muted)">HP. (2021, 22 de diciembre). Acerca del BIOS y cómo actualizarlo. Recuperado de https://support.hp.com/ec-es/document/ish_3936511-3160793-16</p>
+						<p style="color:var(--muted)">PCI-SIG. (2017). PCI Express Specifications. Recuperado de https://pcisig.com/specifications/pciexpress</p>
+						<p style="color:var(--muted)">Reyes, J., Herrero, A., & Charro, M. (2025). Arquitectura de Computadoras: Un enfoque visual. (Página web del proyecto).</p>
+						<p style="color:var(--muted)">Xataka Basics. (2019, 11 de diciembre). Memoria RAM: qué es, para qué sirve y cómo mirar cuánta tiene tu ordenador o móvil. Recuperado de https://www.xataka.com/basics/memoria-ram-que-sirve-como-mirar-cuanta-tiene-tu-ordenador-movil</p>
+					</article>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<script>
+		const toggleBtn = document.getElementById('toggleBtn'), statusDot = document.getElementById('statusDot'), statusText = document.getElementById('statusText'), transBox = document.getElementById('transBox');
+		let on = true;
+		function updateUI(){
+			if(on){
+				statusDot.style.background='#34d399';statusText.textContent='Estado: ON (1)';toggleBtn.textContent='Apagar Transistor';transBox.style.background='#10b981';transBox.style.boxShadow='0 6px 20px rgba(16,185,129,0.12)';
+			}else{statusDot.style.background='#ef4444';statusText.textContent='Estado: OFF (0)';toggleBtn.textContent='Encender Transistor';transBox.style.background='#ef4444';transBox.style.boxShadow='0 6px 20px rgba(239,68,68,0.12)';}
+		}
+		toggleBtn.addEventListener('click',()=>{on=!on;updateUI()});
+		updateUI();
+
+		const products = {
+			procesador: [
+				{ id:'cpu1', name:'Intel Core i3-12100F - 97.00€', price:97 },
+				{ id:'cpu2', name:'Intel Core i5-12400F - 169.00€', price:169 },
+				{ id:'cpu3', name:'Intel Core i5-13400 - 199.00€', price:199 },
+				{ id:'cpu4', name:'Intel Core i7-12700K - 329.00€', price:329 },
+				{ id:'cpu5', name:'Intel Core i9-12900K - 589.00€', price:589 },
+				{ id:'cpu6', name:'AMD Ryzen 3 4100 - 84.00€', price:84 },
+				{ id:'cpu7', name:'AMD Ryzen 5 5600X - 199.00€', price:199 },
+				{ id:'cpu8', name:'AMD Ryzen 7 5800X - 329.00€', price:329 },
+				{ id:'cpu9', name:'AMD Ryzen 9 5900X - 449.00€', price:449 },
+				{ id:'cpu10', name:'AMD Ryzen 5 7600 - 229.00€', price:229 },
+				{ id:'cpu11', name:'Intel Core i5-12600KF - 239.00€', price:239 },
+				{ id:'cpu12', name:'Intel Core i7-13700K - 409.00€', price:409 },
+				{ id:'cpu13', name:'AMD Ryzen 7 7700X - 349.00€', price:349 },
+				{ id:'cpu14', name:'AMD Ryzen 9 7950X - 699.00€', price:699 },
+				{ id:'cpu15', name:'Intel Core i3-13100 - 119.00€', price:119 },
+				{ id:'cpu16', name:'Intel Core i9-13900K - 699.00€', price:699 },
+				{ id:'cpu17', name:'AMD Ryzen 5 7600X - 279.00€', price:279 },
+				{ id:'cpu18', name:'AMD Ryzen 3 5300G - 129.00€', price:129 },
+				{ id:'cpu19', name:'Intel Pentium G7400 - 59.00€', price:59 },
+				{ id:'cpu20', name:'AMD Athlon 3000G - 49.00€', price:49 }
+			],
+			placa: [
+				{ id:'mb1', name:'ASUS Prime B660-PLUS - 139.00€', price:139 },
+				{ id:'mb2', name:'MSI MAG B660M - 129.00€', price:129 },
+				{ id:'mb3', name:'Gigabyte B650 AORUS - 169.00€', price:169 },
+				{ id:'mb4', name:'ASUS ROG Strix Z690-E - 349.00€', price:349 },
+				{ id:'mb5', name:'MSI MPG Z690 EDGE - 299.00€', price:299 },
+				{ id:'mb6', name:'ASRock B550 Steel Legend - 159.00€', price:159 },
+				{ id:'mb7', name:'Gigabyte X570 AORUS - 229.00€', price:229 },
+				{ id:'mb8', name:'MSI X670 Tomahawk - 249.00€', price:249 },
+				{ id:'mb9', name:'ASUS TUF Gaming B550M - 119.00€', price:119 },
+				{ id:'mb10', name:'Gigabyte Z790 AORUS - 399.00€', price:399 },
+				{ id:'mb11', name:'ASRock B450M Pro4 - 69.00€', price:69 },
+				{ id:'mb12', name:'MSI B450 Tomahawk - 89.00€', price:89 },
+				{ id:'mb13', name:'ASUS ROG Crosshair X670E - 599.00€', price:599 },
+				{ id:'mb14', name:'Gigabyte B760M - 119.00€', price:119 },
+				{ id:'mb15', name:'MSI PRO Z690-A - 159.00€', price:159 },
+				{ id:'mb16', name:'ASUS Prime X570-Pro - 199.00€', price:199 },
+				{ id:'mb17', name:'Biostar Racing B550 - 109.00€', price:109 },
+				{ id:'mb18', name:'EVGA Z690 FTW - 429.00€', price:429 },
+				{ id:'mb19', name:'Gigabyte A520M - 59.00€', price:59 },
+				{ id:'mb20', name:'ASUS ProArt B650-CREATOR - 329.00€', price:329 }
+			],
+			ram: [
+				{ id:'ram1', name:'8GB DDR4 2666 - 29.00€', price:29 },
+				{ id:'ram2', name:'8GB DDR4 3200 - 34.00€', price:34 },
+				{ id:'ram3', name:'16GB DDR4 3200 - 69.00€', price:69 },
+				{ id:'ram4', name:'16GB DDR4 3600 - 79.00€', price:79 },
+				{ id:'ram5', name:'32GB DDR4 3200 - 129.00€', price:129 },
+				{ id:'ram6', name:'32GB DDR4 3600 - 149.00€', price:149 },
+				{ id:'ram7', name:'16GB DDR5 4800 - 119.00€', price:119 },
+				{ id:'ram8', name:'32GB DDR5 5200 - 239.00€', price:239 },
+				{ id:'ram9', name:'64GB DDR4 3200 - 249.00€', price:249 },
+				{ id:'ram10', name:'64GB DDR5 5600 - 499.00€', price:499 },
+				{ id:'ram11', name:'4GB DDR4 2133 - 19.00€', price:19 },
+				{ id:'ram12', name:'16GB DDR4 3000 - 65.00€', price:65 },
+				{ id:'ram13', name:'32GB DDR4 3000 - 119.00€', price:119 },
+				{ id:'ram14', name:'8GB DDR5 4800 - 59.00€', price:59 },
+				{ id:'ram15', name:'16GB DDR5 5200 - 139.00€', price:139 },
+				{ id:'ram16', name:'2x8GB 16GB Kit DDR4 - 59.00€', price:59 },
+				{ id:'ram17', name:'2x16GB 32GB Kit DDR4 - 119.00€', price:119 },
+				{ id:'ram18', name:'ECC 16GB Server RAM - 199.00€', price:199 },
+				{ id:'ram19', name:'Laptop 8GB SODIMM - 39.00€', price:39 },
+				{ id:'ram20', name:'Laptop 16GB SODIMM - 79.00€', price:79 }
+			],
+			gpu: [
+				{ id:'gpu1', name:'GTX 1050 Ti - 119.00€', price:119 },
+				{ id:'gpu2', name:'GTX 1660 Super - 199.00€', price:199 },
+				{ id:'gpu3', name:'RTX 2060 - 249.00€', price:249 },
+				{ id:'gpu4', name:'RTX 3060 - 329.00€', price:329 },
+				{ id:'gpu5', name:'RTX 3060 Ti - 399.00€', price:399 },
+				{ id:'gpu6', name:'RTX 3070 - 499.00€', price:499 },
+				{ id:'gpu7', name:'RTX 3080 - 799.00€', price:799 },
+				{ id:'gpu8', name:'RTX 4080 - 1199.00€', price:1199 },
+				{ id:'gpu9', name:'RX 6600 - 199.00€', price:199 },
+				{ id:'gpu10', name:'RX 6700 XT - 379.00€', price:379 },
+				{ id:'gpu11', name:'RX 6800 - 579.00€', price:579 },
+				{ id:'gpu12', name:'GTX 1650 - 149.00€', price:149 },
+				{ id:'gpu13', name:'RTX 3050 - 269.00€', price:269 },
+				{ id:'gpu14', name:'RTX 4070 - 599.00€', price:599 },
+				{ id:'gpu15', name:'RTX 4090 - 1999.00€', price:1999 },
+				{ id:'gpu16', name:'GTX 1080 Ti - 249.00€', price:249 },
+				{ id:'gpu17', name:'RTX 2070 Super - 349.00€', price:349 },
+				{ id:'gpu18', name:'RX 7900 XT - 899.00€', price:899 },
+				{ id:'gpu19', name:'Integrated Graphics (iGPU) - 0.00€', price:0 },
+				{ id:'gpu20', name:'Mobile GPU option (laptop) - 0.00€', price:0 }
+			],
+			almacenamiento: [
+				{ id:'sto1', name:'SSD NVMe 500GB - 59.00€', price:59 },
+				{ id:'sto2', name:'SSD NVMe 1TB - 119.00€', price:119 },
+				{ id:'sto3', name:'HDD 1TB 7200rpm - 44.00€', price:44 },
+				{ id:'sto4', name:'External SSD 1TB - 149.00€', price:149 },
+				{ id:'sto5', name:'NVMe 2TB - 219.00€', price:219 },
+				{ id:'sto6', name:'USB Flash 128GB - 9.00€', price:9 }
+			],
+			refrigeracion: [],
+			fuente: [
+				{ id:'psu1', name:'Fuente 450W - 49.00€', price:49 },
+				{ id:'psu2', name:'Fuente 550W - 59.00€', price:59 },
+				{ id:'psu3', name:'Fuente 650W Bronze - 79.00€', price:79 },
+				{ id:'psu4', name:'Fuente 650W Gold - 99.00€', price:99 },
+				{ id:'psu5', name:'Fuente 750W Gold - 119.00€', price:119 },
+				{ id:'psu6', name:'Fuente 850W Gold - 149.00€', price:149 },
+				{ id:'psu7', name:'Fuente 1000W Platinum - 249.00€', price:249 },
+				{ id:'psu8', name:'SFX 650W - 129.00€', price:129 },
+				{ id:'psu9', name:'Modular 750W - 139.00€', price:139 },
+				{ id:'psu10', name:'80+ Bronze 500W - 59.00€', price:59 },
+				{ id:'psu11', name:'80+ Gold 550W - 69.00€', price:69 },
+				{ id:'psu12', name:'Fanless 400W - 199.00€', price:199 },
+				{ id:'psu13', name:'Redundant PSU module - 399.00€', price:399 },
+				{ id:'psu14', name:'Cables modulares premium - 39.00€', price:39 },
+				{ id:'psu15', name:'Protector de sobretensión - 29.00€', price:29 },
+				{ id:'psu16', name:'UPS 600W (marca) - 89.00€', price:89 },
+				{ id:'psu17', name:'UPS 1000W - 149.00€', price:149 },
+				{ id:'psu18', name:'Cables energía largos - 9.00€', price:9 },
+				{ id:'psu19', name:'Adaptador 24pin extensor - 6.00€', price:6 },
+				{ id:'psu20', name:'Kit ventilación PSU - 14.00€', price:14 }
+			],
+			sistema: [
+				{ id:'os1', name:'Windows 11 Home - 119.00€', price:119 },
+				{ id:'os2', name:'Windows 11 Pro - 199.00€', price:199 },
+				{ id:'os3', name:'Windows 10 Pro - 129.00€', price:129 },
+				{ id:'os4', name:'Ubuntu 22.04 LTS - 0.00€', price:0 },
+				{ id:'os5', name:'Sin sistema operativo - 0.00€', price:0 },
+				{ id:'os6', name:'Support & install service - 39.00€', price:39 }
+			],
+			ram: [
+				{ id:'ram1', brand:'Corsair', name:'Corsair Vengeance 8GB DDR4 3200 - 34.00€', price:34 },
+				{ id:'ram2', brand:'Corsair', name:'Corsair Vengeance 16GB DDR4 3200 - 69.00€', price:69 },
+				{ id:'ram3', brand:'Corsair', name:'Corsair Dominator 32GB DDR4 3600 - 149.00€', price:149 },
+				{ id:'ram4', brand:'G.Skill', name:'G.Skill Ripjaws 8GB DDR4 2666 - 29.00€', price:29 },
+				{ id:'ram5', brand:'G.Skill', name:'G.Skill Trident Z 16GB DDR4 3600 - 79.00€', price:79 },
+				{ id:'ram6', brand:'G.Skill', name:'G.Skill Trident Z 32GB DDR4 3600 - 129.00€', price:129 },
+				{ id:'ram7', brand:'Kingston', name:'Kingston Fury 8GB DDR4 3200 - 34.00€', price:34 },
+				{ id:'ram8', brand:'Kingston', name:'Kingston Fury 16GB DDR4 3200 - 69.00€', price:69 },
+				{ id:'ram9', brand:'Kingston', name:'Kingston HyperX 32GB DDR4 3000 - 119.00€', price:119 },
+				{ id:'ram10', brand:'Crucial', name:'Crucial Ballistix 8GB DDR4 3200 - 32.00€', price:32 },
+				{ id:'ram11', brand:'Crucial', name:'Crucial Ballistix 16GB DDR4 3200 - 64.00€', price:64 },
+				{ id:'ram12', brand:'Crucial', name:'Crucial 32GB DDR4 3200 - 119.00€', price:119 },
+				{ id:'ram13', brand:'Samsung', name:'Samsung DDR4 8GB 2666 - 29.00€', price:29 },
+				{ id:'ram14', brand:'Samsung', name:'Samsung DDR4 16GB 3200 - 59.00€', price:59 },
+				{ id:'ram15', brand:'Samsung', name:'Samsung DDR5 32GB 5200 - 239.00€', price:239 },
+				{ id:'ram16', brand:'Corsair', name:'Corsair Vengeance LPX 16GB - 65.00€', price:65 },
+				{ id:'ram17', brand:'G.Skill', name:'G.Skill Aegis 8GB - 28.00€', price:28 },
+				{ id:'ram18', brand:'Kingston', name:'Kingston ValueRAM 4GB - 19.00€', price:19 },
+				{ id:'ram19', brand:'Crucial', name:'Crucial 64GB Kit DDR4 - 249.00€', price:249 },
+				{ id:'ram20', brand:'Samsung', name:'Samsung OEM 16GB - 79.00€', price:79 }
+			]
+		};
+
+			(function(){
+				const known=['Intel','AMD','ASUS','MSI','Gigabyte','Corsair','G.Skill','Kingston','Crucial','Samsung','Seagate','Western Digital','Logitech','Razer'], rate=1.1;
+				const inferSocket=name=>{ if(!name) return 'any'; if(/Ryzen\s?(9|7|5)\s?7|7950|7700|7600|7900|7800/i.test(name)||name.includes('7700')||name.includes('7950')||name.includes('7600')) return 'AM5'; if(/Ryzen/i.test(name)) return 'AM4'; if(/Z690|B660|Z790|B760|12700|12900|12400|13400|13700|13900|i3|i5|i7|i9/i.test(name)) return 'LGA1700'; return 'any'; };
+				const inferTdp=(name,cat)=>{ if(!name) return 0; if(cat==='procesador'){ if(/i9|7950|13900|12900/i.test(name)) return 125; if(/i7|7700|13700|12700/i.test(name)) return 105; if(/i5|7600|5600X|12400|13400/i.test(name)) return 95; if(/Ryzen 3|Athlon|Pentium/i.test(name)) return 65; return 65;} if(cat==='gpu'){ if(/4090|3090|3080/i.test(name)) return 320; if(/4080|4070|3070|3080/i.test(name)) return 250; if(/3060|3060 Ti|3070/i.test(name)) return 170; if(/2060|1660|1650/i.test(name)) return 130; if(/Integrated|iGPU/i.test(name)) return 0; return 150;} return 0 };
+				for(const cat in products) products[cat].forEach(p=>{ if(typeof p.price === 'number') p.price=+(p.price*rate).toFixed(2); if(typeof p.name === 'string') p.name=p.name.replace(/\s*-\s*\d+(?:\.\d+)?€$/,'').trim(); if(!p.brand){ const found=known.find(k=>p.name.includes(k)); p.brand=found||'Genérico'; } if(cat==='procesador'||cat==='placa') p.socket=inferSocket(p.name); if(cat==='procesador'||cat==='gpu') p.tdp=inferTdp(p.name,cat); });
+			})();
+
+		const categorySelect = document.getElementById('categorySelect');
+		const brandSelect = document.getElementById('brandSelect');
+		const productList = document.getElementById('productList');
+		const selectedList = document.getElementById('selectedList');
+		const totalPriceEl = document.getElementById('totalPrice');
+		const userName = document.getElementById('userName');
+		const greeting = document.getElementById('greeting');
+
+		let selected = {};
+
+		function renderProducts(cat){
+			productList.innerHTML='';
+			let list=products[cat]||[];
+			if(brandSelect&&brandSelect.value&&brandSelect.value!=='all') list=list.filter(x=>x.brand===brandSelect.value);
+			if(cat==='placa'&&selected.procesador&&selected.procesador.socket) list=list.filter(x=>x.socket==='any'||x.socket===selected.procesador.socket);
+			list.forEach(p=>{ const usd=(+p.price).toFixed(2); productList.insertAdjacentHTML('beforeend',`<div class="product-item"><div class="meta"><div style="width:56px;height:42px;background:rgba(255,255,255,0.02);border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--muted)">${p.id.toUpperCase()}</div><div><strong>${p.name||''}</strong><div style="color:var(--muted);font-size:13px">Marca: ${p.brand||'—'} · Precio: $${usd}</div></div></div><div><button class="btn-select" data-id="${p.id}">Seleccionar</button></div></div>`)});
+			document.querySelectorAll('.btn-select').forEach(b=>b.onclick=()=>{const id=b.dataset.id; for(const c in products){const pr=products[c].find(x=>x.id===id); if(pr){selected[c]=pr;break}} renderSelected();});
+		}
+
+		function renderSelected(){
+			selectedList.innerHTML=''; let total=0; const keys=Object.keys(selected);
+			if(keys.length===0) selectedList.innerHTML='<p style="margin:0">No hay componentes seleccionados.</p>';
+			keys.forEach(k=>{ const item=selected[k]; selectedList.insertAdjacentHTML('beforeend',`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div>${item.name}${item.tdp?` <small style=\"color:var(--muted);font-size:11px\">(TDP ${item.tdp}W)</small>`:''}</div><div>$${(+item.price).toFixed(2)}</div></div>`); total+=item.price; });
+			totalPriceEl.textContent='$'+total.toFixed(2);
+			const psuEl=document.getElementById('psuEstimate'); if(psuEl) psuEl.textContent='Estimación PSU: '+estimatePSU()+' W';
+		}
+
+		function populateBrandsFor(cat){ if(!brandSelect) return; const list=products[cat]||[]; const brands=Array.from(new Set(list.map(p=>p.brand).filter(Boolean))); brandSelect.innerHTML='<option value="all">Todas las marcas</option>'+brands.map(b=>`<option value="${b}">${b}</option>`).join(''); brandSelect.style.display=brands.length>0?'inline-block':'none'; }
+
+		categorySelect.addEventListener('change', ()=>{ populateBrandsFor(categorySelect.value); renderProducts(categorySelect.value); });
+		if(brandSelect) brandSelect.addEventListener('change', ()=>{ renderProducts(categorySelect.value); });
+		userName.addEventListener('input', ()=>{greeting.textContent = userName.value ? `Hola, ${userName.value}!` : ''});
+
+		populateBrandsFor(categorySelect.value); renderProducts(categorySelect.value);
+
+
+	const addBtn = document.getElementById('addToCart');
+		const psuBtn=document.createElement('button'); psuBtn.textContent='Calcular potencia PSU'; psuBtn.className='btn-primary'; psuBtn.style.width='100%'; psuBtn.style.marginTop='8px'; addBtn.parentNode.insertBefore(psuBtn,addBtn.nextSibling);
+		function estimatePSU(){ const cpuMap={'i3':60,'i5':95,'i7':125,'i9':125,'Ryzen 3':65,'Ryzen 5':95,'Ryzen 7':105,'Ryzen 9':170}; const gpuMap={'GTX 1050':75,'GTX 1660':120,'RTX 2060':160,'RTX 3060':170,'RTX 3070':220,'RTX 3080':320,'RTX 4090':450,'RX 6600':132,'RX 6800':250}; let cpuTdp=0,gpuTdp=0; for(const k in selected){ const it=selected[k]; if(!it) continue; const n=it.name; for(const key in cpuMap) if(n.includes(key)) cpuTdp=Math.max(cpuTdp,cpuMap[key]); for(const key in gpuMap) if(n.includes(key)) gpuTdp=Math.max(gpuTdp,gpuMap[key]); } const estimate=150+cpuTdp+gpuTdp; return Math.ceil(estimate/50)*50; }
+		psuBtn.addEventListener('click',()=>{ const watt=estimatePSU(); alert(`Estimación de potencia mínima de la fuente: ${watt} W`); });
+
+		addBtn.addEventListener('click',async()=>{ const name=userName.value||'Anónimo'; let score=prompt('Califica tu PC del 1 al 5 (número):'); if(score===null) return; score=Number(score); if(!score||score<1||score>5){ alert('Valor no válido. Introduce un número entre 1 y 5.'); return; } const payload={user:name,score,selected:Object.values(selected),time:new Date().toISOString()}; const existing=JSON.parse(localStorage.getItem('pcRatings')||'[]'); existing.push(payload); localStorage.setItem('pcRatings',JSON.stringify(existing)); alert('Gracias — tu calificación ha sido guardada.'); });
+
+	</script>
+</body>
+</html>
